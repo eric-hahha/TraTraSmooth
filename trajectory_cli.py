@@ -210,6 +210,75 @@ class TrajectoryPlotterCLI:
         ]
         return colors[tracked_id % len(colors)]
 
+    def get_zoom_to_fit_transform(self, selected_trajectories, margin_px=10):
+        """Calculate a uniform scale that enlarges the selected trajectories to fit the image with padding."""
+        if not self.sat_image or not selected_trajectories:
+            return None
+
+        all_points = [
+            point
+            for trajectory in selected_trajectories.values()
+            for point in trajectory
+        ]
+        if not all_points:
+            return None
+
+        x_coords = [point[0] for point in all_points]
+        y_coords = [point[1] for point in all_points]
+
+        min_x, max_x = min(x_coords), max(x_coords)
+        min_y, max_y = min(y_coords), max(y_coords)
+
+        span_x = max_x - min_x
+        span_y = max_y - min_y
+
+        image_width = self.sat_image.width
+        image_height = self.sat_image.height
+        drawable_width = max(image_width - 2 * margin_px, 1)
+        drawable_height = max(image_height - 2 * margin_px, 1)
+
+        if span_x == 0 and span_y == 0:
+            scale = 1.0
+        elif span_x == 0:
+            scale = drawable_height / span_y
+        elif span_y == 0:
+            scale = drawable_width / span_x
+        else:
+            scale = min(drawable_width / span_x, drawable_height / span_y)
+
+        scaled_width = span_x * scale
+        scaled_height = span_y * scale
+        offset_x = margin_px + (drawable_width - scaled_width) / 2.0
+        offset_y = margin_px + (drawable_height - scaled_height) / 2.0
+
+        return {
+            "min_x": min_x,
+            "min_y": min_y,
+            "scale": scale,
+            "offset_x": offset_x,
+            "offset_y": offset_y,
+            "span_x": span_x,
+            "span_y": span_y,
+            "scaled_width": scaled_width,
+            "scaled_height": scaled_height,
+            "margin_px": margin_px,
+        }
+
+    def transform_trajectory_points(self, points, transform=None):
+        """Apply the optional zoom-to-fit transform to trajectory points."""
+        if not transform:
+            return [point[0] for point in points], [point[1] for point in points]
+
+        x_coords = [
+            (point[0] - transform["min_x"]) * transform["scale"] + transform["offset_x"]
+            for point in points
+        ]
+        y_coords = [
+            (point[1] - transform["min_y"]) * transform["scale"] + transform["offset_y"]
+            for point in points
+        ]
+        return x_coords, y_coords
+
     def select_trajectory_ids(self, trajectories: Dict[int, List[Tuple[float, float]]], 
                             object_classes: Dict[int, str]) -> List[int]:
         """Allow user to select which trajectory IDs to plot."""
@@ -308,7 +377,8 @@ class TrajectoryPlotterCLI:
                 print("\nOperation cancelled.")
                 return []
     
-    def plot_selected_trajectories(self, selected_trajectories, object_classes, output_path):
+    def plot_selected_trajectories(self, selected_trajectories, object_classes, output_path,
+                                   zoom_to_fit=False, title_prefix="Selected Object Trajectories"):
         """Plot specific selected trajectories on satellite image."""
         if not self.sat_image or not selected_trajectories:
             print("Error: No satellite image or selected trajectories")
@@ -321,6 +391,8 @@ class TrajectoryPlotterCLI:
         
         # Display satellite image
         ax.imshow(self.sat_image, extent=[0, self.sat_image.width, self.sat_image.height, 0])
+
+        transform = self.get_zoom_to_fit_transform(selected_trajectories) if zoom_to_fit else None
         
         # Plot trajectories with unique colors for each ID
         legend_items = []
@@ -334,8 +406,7 @@ class TrajectoryPlotterCLI:
             color = self.get_color_for_id(tracked_id)  # Unique color per ID
             
             # Extract x and y coordinates
-            x_coords = [p[0] for p in points]
-            y_coords = [p[1] for p in points]
+            x_coords, y_coords = self.transform_trajectory_points(points, transform)
             
             # Plot trajectory line with thicker line for better visibility
             line, = ax.plot(x_coords, y_coords, color=color, linewidth=3, alpha=0.8)
@@ -356,7 +427,7 @@ class TrajectoryPlotterCLI:
         ax.set_xlim(0, self.sat_image.width)
         ax.set_ylim(self.sat_image.height, 0)  # Invert y-axis to match image coordinates
         ax.set_aspect('equal')
-        ax.set_title(f'Selected Object Trajectories - {self.location_name}', fontsize=16, weight='bold')
+        ax.set_title(f'{title_prefix} - {self.location_name}', fontsize=16, weight='bold')
         ax.set_xlabel('X Coordinate (pixels)', fontsize=12)
         ax.set_ylabel('Y Coordinate (pixels)', fontsize=12)
         
@@ -379,6 +450,14 @@ class TrajectoryPlotterCLI:
         stats_text += "Selected Classes:\n"
         for obj_class, count in sorted(selected_class_counts.items()):
             stats_text += f"  {obj_class}: {count}\n"
+
+        if transform:
+            stats_text += (
+                f"\nZoom Scale: {transform['scale']:.3f}x\n"
+                f"Original Span: {transform['span_x']:.1f} x {transform['span_y']:.1f}\n"
+                f"Scaled Span: {transform['scaled_width']:.1f} x {transform['scaled_height']:.1f}\n"
+                f"Margin: {transform['margin_px']:.0f}px\n"
+            )
         
         # Add legend for start/end markers
         stats_text += "\nLegend:\n"

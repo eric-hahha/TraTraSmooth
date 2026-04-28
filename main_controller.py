@@ -13,7 +13,8 @@ import improve
 from trajectory_cli import TrajectoryPlotterCLI
 
 
-def smooth_and_plot(input_file, window_length=45, polyorder=3, plot_output=None, selected_ids=None, output_ids=None):
+def smooth_and_plot(input_file, window_length=45, polyorder=3, plot_output=None, selected_ids=None,
+                    output_ids=None, zoom_to_fit=False, title_prefix="Selected Object Trajectories"):
     """
     執行軌跡平滑處理並繪製圖表
     
@@ -113,7 +114,13 @@ def smooth_and_plot(input_file, window_length=45, polyorder=3, plot_output=None,
         print(f"繪製 {len(output_trajectories)} 條選中的軌跡...")
         
         # 使用選定軌跡進行繪圖
-        if plotter.plot_selected_trajectories(output_trajectories, object_classes, plot_output):
+        if plotter.plot_selected_trajectories(
+            output_trajectories,
+            object_classes,
+            plot_output,
+            zoom_to_fit=zoom_to_fit,
+            title_prefix=title_prefix,
+        ):
             print(f"✓ 軌跡繪圖完成: {plot_output}")
             return smoothed_file, plot_output
         else:
@@ -342,7 +349,8 @@ def select_trajectories_for_processing(plotter):
             return None
 
 
-def process_original_and_plot(input_file, plot_output=None, output_ids=None):
+def process_original_and_plot(input_file, plot_output=None, output_ids=None, zoom_to_fit=False,
+                              title_prefix="Selected Object Trajectories"):
     """
     直接對原始文件進行軌跡繪圖（不進行平滑處理）
     
@@ -408,7 +416,13 @@ def process_original_and_plot(input_file, plot_output=None, output_ids=None):
         print(f"繪製 {len(output_trajectories)} 條選中的軌跡...")
         
         # 使用選定軌跡進行繪圖
-        if plotter.plot_selected_trajectories(output_trajectories, object_classes, plot_output):
+        if plotter.plot_selected_trajectories(
+            output_trajectories,
+            object_classes,
+            plot_output,
+            zoom_to_fit=zoom_to_fit,
+            title_prefix=title_prefix,
+        ):
             print(f"✓ 軌跡繪圖完成: {plot_output}")
             return plot_output
         else:
@@ -424,8 +438,8 @@ def main():
     """主函數"""
     parser = argparse.ArgumentParser(description='軌跡處理主控制器')
     parser.add_argument('input_file', help='輸入的 JSON 軌跡文件')
-    parser.add_argument('--mode', choices=['smooth', 'original', 'both'], default='both',
-                       help='處理模式: smooth(僅平滑+繪圖), original(僅原始繪圖), both(兩者都做)')
+    parser.add_argument('--mode', choices=['smooth', 'original', 'both', 'test'], default='both',
+                       help='處理模式: smooth(僅平滑+繪圖), original(僅原始繪圖), both(兩者都做), test(原始軌跡等比放大輸出)')
     parser.add_argument('--window-length', type=int, default=45,
                        help='平滑窗口長度（必須為奇數，默認45）')
     parser.add_argument('--polyorder', type=int, default=3,
@@ -488,12 +502,31 @@ def main():
     
     results = []
     
-    if args.mode in ['original', 'both']:
+    if args.mode in ['original', 'both', 'test']:
         print("\n開始處理原始軌跡...")
-        original_plot = process_original_and_plot(args.input_file, 
-                                                output_ids=output_ids)
+        test_plot_output = None
+        if args.mode == 'test':
+            input_path = Path(args.input_file)
+            if output_ids:
+                ids_str = "_".join(map(str, sorted(output_ids)[:5]))
+                if len(output_ids) > 5:
+                    ids_str += f"_plus{len(output_ids)-5}more"
+                test_plot_output = f"trajectory_plot_test_{input_path.stem}_IDs_{ids_str}.png"
+            else:
+                test_plot_output = f"trajectory_plot_test_{input_path.stem}.png"
+
+        original_plot = process_original_and_plot(
+            args.input_file,
+            plot_output=test_plot_output,
+            output_ids=output_ids,
+            zoom_to_fit=(args.mode == 'test'),
+            title_prefix='Zoomed Test Trajectories' if args.mode == 'test' else 'Selected Object Trajectories',
+        )
         if original_plot:
-            results.append(f"原始軌跡圖: {original_plot}")
+            if args.mode == 'test':
+                results.append(f"測試放大軌跡圖: {original_plot}")
+            else:
+                results.append(f"原始軌跡圖: {original_plot}")
     
     if args.mode in ['smooth', 'both']:
         if args.mode == 'both':

@@ -1,0 +1,10 @@
+name: traffic-trajectory-smooth
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - matplotlib
+  - pillow
+  - pip

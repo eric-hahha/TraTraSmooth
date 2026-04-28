@@ -21,6 +21,10 @@ venv/
 env/
 ENV/
 
+# Conda environments
+.conda/
+.conda-env/
+
 # Editor settings
 .idea/
 .vscode/

@@ -2,6 +2,27 @@
 
 這個主控制器 (`main_controller.py`) 可以調用 `improve.py` 和 `trajectory_cli.py` 的功能，提供統一的軌跡處理介面。
 
+## Conda 環境設置
+
+建議使用專案內的 [environment.yml](/Users/eric/code/traffic-trajectory-smooth/environment.yml) 建立環境：
+
+```bash
+conda env create -f environment.yml
+conda activate traffic-trajectory-smooth
+```
+
+如果之後更新了依賴，可以同步環境：
+
+```bash
+conda env update -f environment.yml --prune
+```
+
+確認安裝成功：
+
+```bash
+python -c "import numpy, scipy, matplotlib, PIL; print('conda env ok')"
+```
+
 ## 功能特色
 
 1. **軌跡平滑處理**: 使用 `improve.py` 的功能對軌跡進行平滑處理
@@ -42,6 +63,9 @@ python main_controller.py test1_8_50_s.json --mode smooth
 # 僅執行原始軌跡繪圖
 python main_controller.py test1_8_050_s.json --mode original
 
+# 僅執行測試放大輸出（依輸出軌跡的整體範圍等比放大）
+python main_controller.py test1_8_050_s.json --mode test
+
 # 執行兩種處理（原始 + 平滑）
 python main_controller.py test1_8_50_s.json --mode both
 ```
@@ -62,6 +86,7 @@ python main_controller.py test1_8_50_s.json --output-dir ./results/
 - `--mode`: 處理模式
   - `smooth`: 僅執行平滑處理和繪圖
   - `original`: 僅執行原始軌跡繪圖
+  - `test`: 僅執行原始軌跡的放大測試輸出，會根據所有要輸出的軌跡共同的 `x/y` 極值做等比放大，直到寬或高其中一邊貼齊圖片
   - `both`: 執行兩種處理（默認）
 - `--window-length`: 平滑窗口長度，必須為奇數（默認 45）
 - `--polyorder`: 多項式階數（默認 3）
@@ -128,7 +153,10 @@ python main_controller.py test1_8_50_s.json --output-dir ./results/
 2. **原始軌跡圖**: 
    - 所有軌跡: `trajectory_plot_{位置名}_{原文件名}_all.png`
    - 特定軌跡: `trajectory_plot_{位置名}_{原文件名}_IDs_{ID列表}.png`
-3. **平滑軌跡圖**: 
+3. **測試放大軌跡圖**:
+   - 通用輸出: `trajectory_plot_test_{原文件名}.png`
+   - 特定軌跡: `trajectory_plot_test_{原文件名}_IDs_{ID列表}.png`
+4. **平滑軌跡圖**: 
    - 所有軌跡: `trajectory_plot_{位置名}_{原文件名}_smoothed_all.png`
    - 特定軌跡: `trajectory_plot_{位置名}_{原文件名}_smoothed_IDs_{ID列表}.png`
 
