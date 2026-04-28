@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Editor settings
+.idea/
+.vscode/
+
+# Generated artifacts from trajectory processing
+*_smoothed.json
+trajectory_plot_*.png
+filtered_tracked_id_*.json
+
+# Optional logs
+*.log
