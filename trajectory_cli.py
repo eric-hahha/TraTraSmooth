@@ -210,31 +210,6 @@ class TrajectoryPlotterCLI:
         ]
         return colors[tracked_id % len(colors)]
 
-    def _plot_direction_triangle(self, ax, point: Tuple[float, float],
-                                 reference_point: Tuple[float, float],
-                                 face_color: str, edge_color: str,
-                                 marker_size: int = 16) -> None:
-        """Plot a triangle marker rotated to match the trajectory direction."""
-        dx = point[0] - reference_point[0]
-        dy = point[1] - reference_point[1]
-
-        if np.isclose(dx, 0.0) and np.isclose(dy, 0.0):
-            rotation_deg = 0.0
-        else:
-            # Compensate for the inverted y-axis so the triangle points in image-space direction.
-            rotation_deg = np.degrees(np.arctan2(-dy, dx)) - 90.0
-
-        ax.plot(
-            point[0], point[1],
-            marker=(3, 0, rotation_deg),
-            linestyle='None',
-            color=face_color,
-            markersize=marker_size,
-            markeredgecolor=edge_color,
-            markeredgewidth=2,
-            alpha=0.95
-        )
-    
     def select_trajectory_ids(self, trajectories: Dict[int, List[Tuple[float, float]]], 
                             object_classes: Dict[int, str]) -> List[int]:
         """Allow user to select which trajectory IDs to plot."""
@@ -369,13 +344,13 @@ class TrajectoryPlotterCLI:
             if len(legend_items) < 15:
                 legend_items.append((line, f"ID {tracked_id} ({obj_class})"))
             
-            # Plot direction triangles for the start and end points.
-            self._plot_direction_triangle(
-                ax, points[0], points[1], 'lime', 'darkgreen'
-            )
-            self._plot_direction_triangle(
-                ax, points[-1], points[-2], 'red', 'darkred'
-            )
+            # Plot start point (large green circle)
+            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=12, 
+                   markeredgecolor='darkgreen', markeredgewidth=2, alpha=0.9)
+            
+            # Plot end point (large red square)
+            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=12, 
+                   markeredgecolor='darkred', markeredgewidth=2, alpha=0.9)
         
         # Customize plot
         ax.set_xlim(0, self.sat_image.width)
@@ -407,8 +382,8 @@ class TrajectoryPlotterCLI:
         
         # Add legend for start/end markers
         stats_text += "\nLegend:\n"
-        stats_text += "  ▲ Start direction\n"
-        stats_text += "  ▲ End direction"
+        stats_text += "  🟢 Start point\n"
+        stats_text += "  🔴 End point"
         
         ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=11,
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
@@ -473,13 +448,13 @@ class TrajectoryPlotterCLI:
             if len(legend_items) < 15:
                 legend_items.append((line, f"ID {tracked_id} ({obj_class})"))
             
-            # Plot direction triangles for the start and end points.
-            self._plot_direction_triangle(
-                ax, points[0], points[1], 'lime', 'darkgreen'
-            )
-            self._plot_direction_triangle(
-                ax, points[-1], points[-2], 'red', 'darkred'
-            )
+            # Plot start point (large green circle)
+            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=12, 
+                   markeredgecolor='darkgreen', markeredgewidth=2, alpha=0.9)
+            
+            # Plot end point (large red square)
+            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=12, 
+                   markeredgecolor='darkred', markeredgewidth=2, alpha=0.9)
         
         # Customize plot
         ax.set_xlim(0, self.sat_image.width)
@@ -512,8 +487,8 @@ class TrajectoryPlotterCLI:
         
         # Add legend for start/end markers
         stats_text += "\nLegend:\n"
-        stats_text += "  ▲ Start direction\n"
-        stats_text += "  ▲ End direction"
+        stats_text += "  🟢 Start point\n"
+        stats_text += "  🔴 End point"
         
         ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=11,
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
@@ -587,13 +562,13 @@ class TrajectoryPlotterCLI:
             if len(legend_items) < 15:
                 legend_items.append((line, f"ID {tracked_id} ({obj_class})"))
             
-            # Plot direction triangles for the start and end points.
-            self._plot_direction_triangle(
-                ax, points[0], points[1], 'lime', 'darkgreen'
-            )
-            self._plot_direction_triangle(
-                ax, points[-1], points[-2], 'red', 'darkred'
-            )
+            # Plot start point (large green circle)
+            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=12, 
+                   markeredgecolor='darkgreen', markeredgewidth=2, alpha=0.9)
+            
+            # Plot end point (large red square)
+            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=12, 
+                   markeredgecolor='darkred', markeredgewidth=2, alpha=0.9)
         
         # Customize plot
         ax.set_xlim(0, self.sat_image.width)
@@ -627,8 +602,8 @@ class TrajectoryPlotterCLI:
         
         # Add legend for start/end markers
         stats_text += "\nLegend:\n"
-        stats_text += "  ▲ Start direction\n"
-        stats_text += "  ▲ End direction"
+        stats_text += "  🟢 Start point\n"
+        stats_text += "  🔴 End point"
         
         ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=11,
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
