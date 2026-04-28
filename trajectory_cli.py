@@ -16,6 +16,7 @@ from typing import Dict, List, Tuple, Optional
 
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
+from matplotlib import colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
@@ -209,6 +210,11 @@ class TrajectoryPlotterCLI:
             "#E8F8F5", "#FEF9E7", "#F4ECF7", "#EBF5FB", "#E8F6F3"
         ]
         return colors[tracked_id % len(colors)]
+
+    def get_darker_color(self, color: str, factor: float = 0.65) -> Tuple[float, float, float]:
+        """Return a darker variant of a matplotlib-compatible color."""
+        rgb = np.array(mcolors.to_rgb(color))
+        return tuple(np.clip(rgb * factor, 0, 1))
 
     def get_zoom_to_fit_transform(self, selected_trajectories, margin_px=10):
         """Calculate a uniform scale that enlarges the selected trajectories to fit the image with padding."""
@@ -408,19 +414,28 @@ class TrajectoryPlotterCLI:
             # Extract x and y coordinates
             x_coords, y_coords = self.transform_trajectory_points(points, transform)
             
-            # Plot trajectory line with thicker line for better visibility
-            line, = ax.plot(x_coords, y_coords, color=color, linewidth=3, alpha=0.8)
+            # Plot each trajectory sample as a marker instead of a connected line
+            line, = ax.plot(
+                x_coords, y_coords,
+                linestyle='None',
+                marker='o',
+                markersize=3,
+                color=color,
+                markeredgecolor=self.get_darker_color(color),
+                markeredgewidth=0.8,
+                alpha=0.8
+            )
             
             # Add to legend (limit to avoid clutter)
             if len(legend_items) < 15:
                 legend_items.append((line, f"ID {tracked_id} ({obj_class})"))
             
             # Plot start point (large green circle)
-            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=12, 
+            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=3, 
                    markeredgecolor='darkgreen', markeredgewidth=2, alpha=0.9)
             
             # Plot end point (large red square)
-            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=12, 
+            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=3, 
                    markeredgecolor='darkred', markeredgewidth=2, alpha=0.9)
         
         # Customize plot
@@ -520,19 +535,28 @@ class TrajectoryPlotterCLI:
             x_coords = [p[0] for p in points]
             y_coords = [p[1] for p in points]
             
-            # Plot trajectory line with thicker line for better visibility
-            line, = ax.plot(x_coords, y_coords, color=color, linewidth=3, alpha=0.8)
+            # Plot each trajectory sample as a marker instead of a connected line
+            line, = ax.plot(
+                x_coords, y_coords,
+                linestyle='None',
+                marker='o',
+                markersize=3,
+                color=color,
+                markeredgecolor=self.get_darker_color(color),
+                markeredgewidth=0.8,
+                alpha=0.8
+            )
             
             # Add to legend (limit to avoid clutter)
             if len(legend_items) < 15:
                 legend_items.append((line, f"ID {tracked_id} ({obj_class})"))
             
             # Plot start point (large green circle)
-            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=12, 
+            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=3, 
                    markeredgecolor='darkgreen', markeredgewidth=2, alpha=0.9)
             
             # Plot end point (large red square)
-            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=12, 
+            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=3, 
                    markeredgecolor='darkred', markeredgewidth=2, alpha=0.9)
         
         # Customize plot
@@ -634,19 +658,28 @@ class TrajectoryPlotterCLI:
             x_coords = [p[0] for p in points]
             y_coords = [p[1] for p in points]
             
-            # Plot trajectory line with thicker line for better visibility
-            line, = ax.plot(x_coords, y_coords, color=color, linewidth=3, alpha=0.8)
+            # Plot each trajectory sample as a marker instead of a connected line
+            line, = ax.plot(
+                x_coords, y_coords,
+                linestyle='None',
+                marker='o',
+                markersize=3,
+                color=color,
+                markeredgecolor=self.get_darker_color(color),
+                markeredgewidth=0.8,
+                alpha=0.8
+            )
             
             # Add to legend (limit to avoid clutter)
             if len(legend_items) < 15:
                 legend_items.append((line, f"ID {tracked_id} ({obj_class})"))
             
             # Plot start point (large green circle)
-            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=12, 
+            ax.plot(x_coords[0], y_coords[0], 'o', color='lime', markersize=3, 
                    markeredgecolor='darkgreen', markeredgewidth=2, alpha=0.9)
             
             # Plot end point (large red square)
-            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=12, 
+            ax.plot(x_coords[-1], y_coords[-1], 's', color='red', markersize=3, 
                    markeredgecolor='darkred', markeredgewidth=2, alpha=0.9)
         
         # Customize plot
